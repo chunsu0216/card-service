@@ -5,7 +5,7 @@ spring:
     name: card-service
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
   eureka:
     client:
       register-with-eureka: true
@@ -15,3 +15,10 @@ spring:
     instance:
       instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
 
+ksnet:
+  old-keyIn-url: https://paydev.ksnet.co.kr/kspay/webfep/api/v1/card/pay/oldcert
+  non-keyIn-url: https://paydev.ksnet.co.kr/kspay/webfep/api/v1/card/pay/noncert
+  cancel-url: https://paydev.ksnet.co.kr/kspay/webfep/api/v1/card/cancel
+
+security:
+  key: adndkcsk2123ASDBDa7379akl

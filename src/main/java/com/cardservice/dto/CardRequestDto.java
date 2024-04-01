@@ -9,14 +9,17 @@ public class CardRequestDto {
 
     @NotNull(message = "주문 ID는 필수 값입니다.")
     @NotEmpty(message = "주문 ID는 필수 값입니다.")
+    @Size(max = 50, message = "주문 ID는 50자리 이하여야 합니다.")
     private String orderId;
 
     @NotNull(message = "주문자명은 필수 값입니다.")
     @NotEmpty(message = "주문자명은 필수 값입니다.")
+    @Size(max = 50, message = "주문자명은 50자리 이하여야 합니다.")
     private String orderName;
 
     @NotNull(message = "상품명은 필수 값입니다.")
     @NotEmpty(message = "상품명은 필수 값입니다.")
+    @Size(max = 50, message = "상품명은 50자리 이하여야 합니다.")
     private String productName;
 
     @NotNull(message = "금액은 필수 값입니다.")

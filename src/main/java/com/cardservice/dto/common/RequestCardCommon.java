@@ -1,4 +1,4 @@
-package com.cardservice.dto;
+package com.cardservice.dto.common;
 
 import lombok.Builder;
 import lombok.Data;
