@@ -1,13 +1,9 @@
 package com.cardservice.service.card;
 
-import com.cardservice.dto.common.Card;
+import com.cardservice.dto.Card;
 import com.cardservice.entity.CardInfo;
 import com.cardservice.repository.CardInfoRepository;
 import com.cardservice.service.encrypt.EncryptService;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;

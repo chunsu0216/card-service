@@ -41,6 +41,7 @@ public class ValidationUtil {
      */
     public static boolean validUserInfo(String userInfo) {
         String regexp = "^(\\d{2})(\\d{2})(\\d{2})$";
+        //String regexp = "/([0-9]{2}(0[1-9]|1[0-2])(0[1-9]|[1,2][0-9]|3[0,1]))/g";
 
         Pattern pattern = Pattern.compile(regexp);
         Matcher matcher = pattern.matcher(userInfo);

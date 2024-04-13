@@ -5,7 +5,7 @@ spring:
     name: card-service
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
   eureka:
     client:
       register-with-eureka: true
@@ -22,3 +22,11 @@ ksnet:
 
 security:
   key: adndkcsk2123ASDBDa7379akl
+
+topic:
+  kafka: approve
+
+logging:
+  level:
+    org.springframework.kafka.core: trace
+    org.springframework.transaction.interceptor: trace

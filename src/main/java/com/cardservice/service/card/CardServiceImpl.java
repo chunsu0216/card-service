@@ -3,14 +3,18 @@ package com.cardservice.service.card;
 import com.cardservice.client.CommonServiceClient;
 import com.cardservice.dto.ApiResponse;
 import com.cardservice.dto.CardRequestDto;
-import com.cardservice.dto.common.Card;
+import com.cardservice.dto.Card;
+import com.cardservice.dto.KafkaSend;
 import com.cardservice.dto.common.CommonApiResult;
 import com.cardservice.entity.Approve;
 import com.cardservice.entity.ApproveRefuse;
 import com.cardservice.exception.ErrorResult;
+import com.cardservice.kafka.ApproveProducer;
+import com.cardservice.kafka.KafkaProducer;
 import com.cardservice.message.ApiResponseMessage;
 import com.cardservice.repository.ApproveRefuseRepository;
 import com.cardservice.repository.ApproveRepository;
+import com.cardservice.repository.CardRequestRepository;
 import com.cardservice.service.van.VanService;
 import com.cardservice.util.ValidationUtil;
 import lombok.RequiredArgsConstructor;
@@ -19,9 +23,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -35,8 +39,12 @@ public class CardServiceImpl implements CardService{
     private final CardRequestService cardRequestService;
     private final Map<String, VanService> vanServiceMap;
     private final CardInfoService cardInfoService;
-    private final ApproveRepository approveRepository;
+    //private final ApproveRepository approveRepository;
     private final ApproveRefuseRepository approveRefuseRepository;
+    private final KafkaProducer kafkaProducer;
+    private final ApproveProducer approveProducer;
+
+
     @Transactional
     @Override
     public ResponseEntity<?> keyIn(CardRequestDto cardRequestDto, String authorization, String method) {
@@ -57,7 +65,7 @@ public class CardServiceImpl implements CardService{
                 throw new IllegalArgumentException(ApiResponseMessage.INVALID_PASSWORD.message());
             }
         }
-        // 공통 서비스 호출
+        // 공통 서비스 API 
         // 정상이 아닐 경우 공통 서비스로부터 받은 응답 그대로 API 응답 내려주고 exception 처리
         ResponseEntity<CommonApiResult> result = commonServiceClient.verificationMerchant(authorization, cardRequestDto.getAmount());
 
@@ -95,17 +103,17 @@ public class CardServiceImpl implements CardService{
                                      cardRequestDto.getPassword(),
                                      cardRequestDto.getUserInfo());
 
-        // 카드 승인 결과 저장
-        Approve approve = approveRepository.save(setApprove(transactionId,
-                                                            cardRequestDto,
-                                                            result.getBody(),
-                                                            resultMap,
-                                                            method));
+        Approve approve = setApprove(transactionId, cardRequestDto, result.getBody(), resultMap, method);
 
         // 카드 정보 복호화 및 셋팅
         Card card = getCard(transactionId, approve);
 
-        // TODO Kafka 연동
+        // 카드 승인 결과 저장
+        // kafka sink-connector send
+        approveProducer.send(approve);
+
+        // kafka event 발행
+        kafkaProducer.send(setSendKafka(approve));
 
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.builder()
                 .transactionId(approve.getTransactionId())
@@ -117,6 +125,29 @@ public class CardServiceImpl implements CardService{
                 .approvalNumber(approve.getApprovalNumber())
                 .card(card)
                 .build());
+    }
+
+    @Override
+    public Object cancel() {
+        return null;
+    }
+
+    private KafkaSend setSendKafka(Approve approve) {
+        return KafkaSend.builder()
+                .transactionId(approve.getTransactionId())
+                .terminalId(approve.getTerminalId())
+                .orderId(approve.getOrderId())
+                .orderName(approve.getOrderName())
+                .productName(approve.getProductName())
+                .amount(approve.getAmount())
+                .approvalNumber(approve.getApprovalNumber())
+                .van(approve.getVan())
+                .vanId(approve.getVanId())
+                .vanTrxId(approve.getVanTrxId())
+                .vanResultCode(approve.getVanResultCode())
+                .vanResultMessage(approve.getVanResultMessage())
+                .tradeDateTime(String.valueOf(approve.getTradeDateTime()))
+                .build();
     }
 
     /**
@@ -193,10 +224,5 @@ public class CardServiceImpl implements CardService{
                 .vanResultMessage(resultMap.get("resultMessage").toString())
                 .tradeDateTime(LocalDateTime.parse(resultMap.get("tradeDateTime").toString(), formatter))
                 .build();
-    }
-
-    @Override
-    public Object cancel() {
-        return null;
     }
 }

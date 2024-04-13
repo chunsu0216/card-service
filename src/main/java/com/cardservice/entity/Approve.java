@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Builder
 public class Approve extends BaseEntity{
 
-    @Id @GeneratedValue
+    @Id
     private Long idx;
     private String transactionId;
     private String terminalId;
