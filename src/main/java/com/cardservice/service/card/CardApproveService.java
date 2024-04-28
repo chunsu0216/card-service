@@ -1,10 +1,7 @@
 package com.cardservice.service.card;
 
 import com.cardservice.client.CommonServiceClient;
-import com.cardservice.dto.ApiResponse;
-import com.cardservice.dto.CardRequestDto;
-import com.cardservice.dto.Card;
-import com.cardservice.dto.KafkaSend;
+import com.cardservice.dto.*;
 import com.cardservice.dto.common.CommonApiResult;
 import com.cardservice.entity.Approve;
 import com.cardservice.entity.ApproveRefuse;
@@ -14,7 +11,6 @@ import com.cardservice.kafka.KafkaProducer;
 import com.cardservice.message.ApiResponseMessage;
 import com.cardservice.repository.ApproveRefuseRepository;
 import com.cardservice.repository.ApproveRepository;
-import com.cardservice.repository.CardRequestRepository;
 import com.cardservice.service.van.VanService;
 import com.cardservice.util.ValidationUtil;
 import lombok.RequiredArgsConstructor;
@@ -25,28 +21,24 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class CardServiceImpl implements CardService{
+public class CardApproveService {
 
     private final CommonServiceClient commonServiceClient;
     private final CardRequestService cardRequestService;
     private final Map<String, VanService> vanServiceMap;
     private final CardInfoService cardInfoService;
-    //private final ApproveRepository approveRepository;
+    private final ApproveRepository approveRepository;
     private final ApproveRefuseRepository approveRefuseRepository;
     private final KafkaProducer kafkaProducer;
     private final ApproveProducer approveProducer;
 
 
     @Transactional
-    @Override
     public ResponseEntity<?> keyIn(CardRequestDto cardRequestDto, String authorization, String method) {
 
         // 유효기간 검증
@@ -125,11 +117,6 @@ public class CardServiceImpl implements CardService{
                 .approvalNumber(approve.getApprovalNumber())
                 .card(card)
                 .build());
-    }
-
-    @Override
-    public Object cancel() {
-        return null;
     }
 
     private KafkaSend setSendKafka(Approve approve) {
@@ -223,6 +210,7 @@ public class CardServiceImpl implements CardService{
                 .vanResultCode(resultMap.get("resultCode").toString())
                 .vanResultMessage(resultMap.get("resultMessage").toString())
                 .tradeDateTime(LocalDateTime.parse(resultMap.get("tradeDateTime").toString(), formatter))
+                .cancelCount(0)
                 .build();
     }
 }

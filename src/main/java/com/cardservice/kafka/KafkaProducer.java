@@ -1,12 +1,10 @@
 package com.cardservice.kafka;
 
-import com.cardservice.dto.ApiResponse;
 import com.cardservice.dto.KafkaSend;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +25,18 @@ public class KafkaProducer {
         jsonInString = objectMapper.writeValueAsString(kafkaSend);
 
         kafkaTemplate.send("approve_result", jsonInString);
+        log.info("Kafka Topic Send =====> {}", jsonInString);
+    }
+
+    @SneakyThrows
+    public void cancelSend(KafkaSend kafkaSend){
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        String jsonInString = "";
+
+        jsonInString = objectMapper.writeValueAsString(kafkaSend);
+
+        kafkaTemplate.send("cancel_result", jsonInString);
         log.info("Kafka Topic Send =====> {}", jsonInString);
     }
 }

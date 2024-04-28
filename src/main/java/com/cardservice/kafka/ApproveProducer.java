@@ -47,7 +47,8 @@ public class ApproveProducer {
             new Field("string", true, "van_trx_id"),
             new Field("string", true, "van_result_code"),
             new Field("string", true, "van_result_message"),
-            new Field("string", true, "terminal_id")
+            new Field("string", true, "terminal_id"),
+            new Field("int32", true, "cancel_count")
             );
     Schema schema = Schema.builder()
             .type("struct")
@@ -94,6 +95,7 @@ public class ApproveProducer {
                 .van_result_code(approve.getVanResultCode())
                 .van_result_message(approve.getVanResultMessage())
                 .terminal_id(approve.getTerminalId())
+                .cancel_count(approve.getCancelCount())
                 .build();
     }
 }

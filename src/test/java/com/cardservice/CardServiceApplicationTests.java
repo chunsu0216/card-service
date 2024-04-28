@@ -1,25 +1,26 @@
 package com.cardservice;
 
 import com.cardservice.client.CommonServiceClient;
+import com.cardservice.dto.CancelRequestDto;
 import com.cardservice.dto.CardRequestDto;
 import com.cardservice.message.ApiResponseMessage;
 import com.cardservice.repository.CardRequestRepository;
 import com.cardservice.service.card.CardRequestService;
-import com.cardservice.service.card.CardService;
-import com.cardservice.service.card.CardServiceImpl;
-import com.cardservice.util.ValidationUtil;
+import com.cardservice.service.card.CardApproveService;
 import feign.FeignException;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -29,7 +30,7 @@ import static org.assertj.core.api.Assertions.*;
 class CardServiceApplicationTests {
 
 	@Autowired
-	private CardServiceImpl cardService;
+	private CardApproveService cardService;
 	@Autowired
 	private CardRequestRepository cardRequestRepository;
 	@Autowired

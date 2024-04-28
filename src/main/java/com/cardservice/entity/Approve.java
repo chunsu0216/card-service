@@ -1,19 +1,17 @@
 package com.cardservice.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "approve")
 @Getter
-@Builder
-public class Approve extends BaseEntity{
+public class Approve{
 
     @Id
     private Long idx;
@@ -37,8 +35,16 @@ public class Approve extends BaseEntity{
     private String vanResultCode;
     private String vanResultMessage;
     private LocalDateTime tradeDateTime;
+    private int cancelCount;
 
-    public Approve(Long idx, String transactionId, String terminalId, String method, Long amount, String orderId, String orderName, String productName, String installment, String issuerCardType, String issuerCardName, String purchaseCardType, String purchaseCardName, String cardType, String approvalNumber, String van, String vanId, String vanTrxId, String vanResultCode, String vanResultMessage, LocalDateTime tradeDateTime) {
+    public void decreaseAmount(Long cancelAmount){
+        if(this.amount - cancelAmount < 0) throw new IllegalArgumentException("0원 이하로 UPDATE");
+        this.amount -= cancelAmount;
+        this.cancelCount++;
+    }
+
+    @Builder
+    public Approve(Long idx, String transactionId, String terminalId, String method, Long amount, String orderId, String orderName, String productName, String installment, String issuerCardType, String issuerCardName, String purchaseCardType, String purchaseCardName, String cardType, String approvalNumber, String van, String vanId, String vanTrxId, String vanResultCode, String vanResultMessage, LocalDateTime tradeDateTime, int cancelCount) {
         this.idx = idx;
         this.transactionId = transactionId;
         this.terminalId = terminalId;
@@ -60,8 +66,10 @@ public class Approve extends BaseEntity{
         this.vanResultCode = vanResultCode;
         this.vanResultMessage = vanResultMessage;
         this.tradeDateTime = tradeDateTime;
+        this.cancelCount = cancelCount;
     }
 
     public Approve() {
+
     }
 }

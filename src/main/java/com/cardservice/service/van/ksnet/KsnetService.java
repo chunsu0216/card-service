@@ -2,6 +2,7 @@ package com.cardservice.service.van.ksnet;
 
 import com.cardservice.dto.CardRequestDto;
 import com.cardservice.dto.common.CommonApiResult;
+import com.cardservice.entity.Approve;
 import com.cardservice.service.van.VanService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -69,6 +70,75 @@ public class KsnetService implements VanService {
         return resultMap;
     }
 
+    @Override
+    public Map<String, Object> cancel(Approve approve, Long amount, CommonApiResult commonApiResult, boolean isFullCancel) {
+        KsnetResponse ksnetResponse = callCancelApi(approve, amount, commonApiResult, isFullCancel);
+        log.info("API RESULT : {}", ksnetResponse);
+
+        Map<String, Object> resultMap = new HashMap<>();
+
+        resultMap.put("resultCode", ksnetResponse.getData().getRespCode());
+        resultMap.put("resultMessage", ksnetResponse.getData().getRespMessage());
+
+        return resultMap;
+    }
+
+    private KsnetResponse callCancelApi(Approve approve, Long amount, CommonApiResult commonApiResult, boolean isFullCancel) {
+        KsnetCancelRequestDto ksnetCancelRequestDto = setCancelDto(approve, amount, commonApiResult.getVanId(), isFullCancel);
+
+        HttpHeaders headers = new HttpHeaders();
+        MediaType mediaType = new MediaType("application", "json", StandardCharsets.UTF_8);
+        headers.setContentType(mediaType);
+        headers.set("Authorization", commonApiResult.getVanKey());
+        HttpEntity<String> entity = null;
+
+        try {
+            entity = new HttpEntity<>(objectMapper.writeValueAsString(ksnetCancelRequestDto), headers);
+        } catch (JsonProcessingException e) {
+            log.info("JsonProcessingException", e);
+        }
+        log.info("request => {}", Objects.requireNonNull(entity).getBody());
+
+        ResponseEntity<KsnetResponse> response = restTemplate.postForEntity(cancelUrl, entity, KsnetResponse.class);
+
+        log.info("response => {}", response.toString());
+
+        if(!response.getStatusCode().is2xxSuccessful()){
+            log.info("KSNET 승인 취소 API 호출 실패");
+            throw new RuntimeException("서버 통신 오류 잠시 후 다시 시도해주세요.");
+        }
+
+        return response.getBody();
+    }
+
+    private KsnetCancelRequestDto setCancelDto(Approve approve, Long amount, String vanId, boolean isFullCancel) {
+        // 부분 취소 셋팅
+        if (!isFullCancel) {
+            int cancelCount = approve.getCancelCount();
+            if (cancelCount == 0) {
+                cancelCount = 1;
+            }else{
+                cancelCount = cancelCount + 1;
+            }
+            return KsnetCancelRequestDto.builder()
+                    .mid(approve.getVanId())
+                    .cancelType("PARTIAL")
+                    .orgTradeKeyType("TID")
+                    .orgTradeKey(approve.getVanTrxId())
+                    .cancelTotalAmount(String.valueOf(amount))
+                    .cancelTaxFreeAmount("0")
+                    .cancelSeq(String.valueOf(cancelCount))
+                    .build();
+        }
+        return KsnetCancelRequestDto.builder()
+                .mid(approve.getVanId())
+                .cancelType("FULL")
+                .orgTradeKeyType("TID")
+                .orgTradeKey(approve.getVanTrxId())
+                .build();
+    }
+
+
     /**
      * KSNET API 요청 분기 처리
      * @param transactionId
@@ -85,6 +155,8 @@ public class KsnetService implements VanService {
         }
         return ksnetResponse;
     }
+
+
 
     private KsnetResponse callOldKeyIn(KsnetOldKeyInRequest request, String vanKey) {
         HttpHeaders headers = new HttpHeaders();

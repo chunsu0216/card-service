@@ -25,4 +25,5 @@ public class Payload {
     private String van_result_code;
     private String van_result_message;
     private String terminal_id;
+    private int cancel_count;
 }
